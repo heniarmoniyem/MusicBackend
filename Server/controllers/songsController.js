@@ -6,7 +6,7 @@ const getAllSongs = asyncHandler( async (req, res)=>{
 
     const songs= await Song.find().lean()
     if(!songs?.length) {
-        return res.status(400).json({message: 'No users found'})
+        return res.status(400).json({message: 'No song found'})
     }
     res.json(songs)
 
@@ -23,11 +23,11 @@ const addNewSongs =asyncHandler( async (req, res)=>{
         return res.status(400).json({ message: 'All fileds are required'})
     }
 
-    // //check for duplicates
-    // const duplicate = await Song.findOne({title}).lean().exec()
-    // if(duplicate){
-    //     return res.status(409).json({message: 'Duplicate Song'})
-    // }
+    //check for duplicates
+    const duplicate = await Song.findOne({title}).lean().exec()
+    if(duplicate){
+        return res.status(409).json({message: 'Duplicate Song'})
+    }
 
 
     const songObject ={title,album,artist,genre}
