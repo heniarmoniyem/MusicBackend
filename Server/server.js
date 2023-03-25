@@ -1,50 +1,101 @@
-require("dotenv").config();
-const express = require("express");
-const app = express();
-const path = require("path");
-const PORT = process.env.PORT || 3500;
-const { logger } = require("./middleware/logger");
-const errorHandler = require("./middleware/errorHandler");
-const cookieParser = require("cookie-parser");
-const cors = require("cors");
-const corsOptions = require("./config/corsOptions");
-const connectDB = require("./config/dbConn");
-const mongoose = require("mongoose");
-const { logEvents } = require("./middleware/logger");
+const express = require('express');
 
-// console.log(process.env.DATABASE_URI)
+const morgan = require('morgan');
+const helmet = require('helmet');
+const cores = require('cors');
+
+require('dotenv').config();
+
+const Song = require('./models/Song');
+
+const app = express();
+
+const connectDB = require('./config/db');
+
+//middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use(morgan('dev'));
+app.use(helmet());
+app.use(cores());
+// app.use(errorHandler);
 
 connectDB();
 
-app.use(express.json());
-app.use(logger);
-app.use(cookieParser());
-app.use(cors(corsOptions));
-app.use("/", express.static(path.join(__dirname, "public")));
-app.use("/", require("./routes/root"));
-app.use('/songs', require('./routes/songRoutes'))
+// run the server on port 3000 or the port defined in the environment
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Listening on port ${port}...`));
 
-app.all("*", (req, res) => {
-  res.status(404);
-  if (req.accepts("html")) {
-    res.sendFile(path.join(__dirname, "views", "404.html"));
-  } else if (req.accepts("json")) {
-    res.json({ message: "404 Not Found" });
-  } else {
-    res.type("txt").send("404 Not Found");
+// CREATE a new song
+app.post('/', async (req, res) => {
+  try {
+    const { title, artist, album, genre } = req.body;
+    const song = new Song({ title, artist, album, genre });
+    await song.save();
+    res.status(201).json(song);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
-app.use(errorHandler);
 
-mongoose.connection.once("open", () => {
-  console.log("Connected to MongoDB..");
-  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+// READ all songs
+app.get('/', async (req, res) => {
+  try {
+    const songs = await Song.find();
+    res.json(songs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-mongoose.connection.on("error", (err) => {
-  console.log(err);
-  logEvents(
-    `${err.no}: ${err.code}\t${err.syscall}\t${err.hostname}`,
-    "mongoErrLog.log"
-  );
+// READ a single song
+app.get('/:id', getSong, (req, res) => {
+  res.json(res.song);
 });
+
+// UPDATE a song
+app.post('/:id', getSong, async (req, res) => {
+  if (req.body.title != null) {
+    res.song.title = req.body.title;
+  }
+  if (req.body.artist != null) {
+    res.song.artist = req.body.artist;
+  }
+  if (req.body.album != null) {
+    res.song.album = req.body.album;
+  }
+  if (req.body.genre != null) {
+    res.song.genre = req.body.genre;
+  }
+  try {
+    const updatedSong = await res.song.save();
+    res.json(updatedSong);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE a song
+app.delete('/:id', getSong, async (req, res) => {
+  try {
+    await res.song.deleteOne(); // use deleteOne() to remove the Song document
+    res.json({ message: 'Deleted Song' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Middleware to get a single song by ID
+async function getSong(req, res, next) {
+  try {
+    const song = await Song.findById(req.params.id);
+    if (song == null) {
+      return res.status(404).json({ message: 'Cannot find song' });
+    }
+    res.song = song; // set the retrieved document as res.song
+    next();
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
