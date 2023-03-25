@@ -53,7 +53,7 @@ const updateSongs =asyncHandler( async (req, res)=>{
     const song = await Song.findById(id).exec()
 
     if(!song){
-        return res.status(400).json({message: 'User Not Found'})
+        return res.status(400).json({message: 'Song Not Found'})
     }
 
     //check for duplicate
