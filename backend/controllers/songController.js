@@ -20,20 +20,22 @@ const getAllSong = asyncHandeler( async(req, res) =>{
 // Add Songs to the List
 const createNewSong = asyncHandeler(async(req, res) =>{
         const {title, album, artist, genre} = req.body
-       
-        
+   
+        if(!title || !album || !artist || !genre){
+            return res.status(400).json({message: 'All Fileds are required'})
+        }
         const duplicate = await Song.findOne({title}).lean().exec()
 
         if(duplicate){
             return res.status(409).json({message: 'Duplicate Song'})
-        }
+        } 
 
         const songObject= {title, album, artist, genre}
 
         const song= await Song.create(songObject)
 
             if(song){
-                res.status(201).json({message: `New Song ${title} Added to the List`})
+                res.status(201).json({message: `New Music: ${title} Added to the List`})
             }else{
                 res.status(400).json({message: 'Invalid data received'})
             }
@@ -41,31 +43,36 @@ const createNewSong = asyncHandeler(async(req, res) =>{
 })
 
 
-//Update Song
+//patch Song
 
 const updateSong = asyncHandeler(async(req, res) =>{
-    const {title, album, artist, genre} = req.body
+    const {id, title, album, artist, genre} = req.body
 
-   
+    if(!id || !title || !album || !artist || !genre){
+        return res.status(400).json({message: 'All Fileds are required'})
+    }
+
     const song= await Song.findById(id).exec()
 
     if(!song){
         return res.status(400).json({message: 'User Not found'})
     }
 
-    // const duplicate = await Song.findOne({name}).lean().exec()
-    // if(duplicate && duplicate?._id.toString()  !== id){
-    //     return res.status(409).json({message: 'Duplicate name'})
-    // } 
+
+    // check for duplicate
+    const duplicate = await Song.findOne({title}).lean().exec()
+    if(duplicate && duplicate?._id.toString()  !== id){
+        return res.status(409).json({message: 'Duplicate Title'})
+    } 
 
     song.title= title
     song.album=album
     song.artist=artist
-    song.genre=genre
+    song.genre=genre 
 
-    const updateSong= await song.save()
+    const updatedSong= await song.save()
 
-    res.json({message: `${updateSong.title} updated`})
+    res.json({message: `${updatedSong.title} updated`})
     
 })
 
@@ -85,7 +92,7 @@ const deleteSong = asyncHandeler(async(req, res) =>{
 
     const result = await song.deleteOne()
 
-    const reply = `Song ${result.title} with ID ${result.id} deleted`
+    const reply = `Music ${result.title} with ID ${result.id} deleted`
 
     res.json(reply)
 })
