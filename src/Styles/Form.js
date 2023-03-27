@@ -34,7 +34,7 @@ const Form = styled.form`
     padding: 1rem 2rem;
     border-radius: 1rem;
     border: 1px solid #ccc;
-    color: white;
+    color: black;
     background-color: white;
   }
 

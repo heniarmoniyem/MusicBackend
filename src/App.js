@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import Container from './Styles/Container';
 import Form from './Styles/Form';
 import Main from './Styles/Main';
 import Table from './Styles/Table';
+import { useDispatch } from 'react-redux';
+import { useEffect } from 'react';
+import {
+  fetchSongs,
+  postSongs,
+  deleteSongs,
+} from './redux/songSlice/songThunks';
+import { useSelector } from 'react-redux';
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 
 function App() {
-  const [songList, setSongList] = useState([
-    { id: 1, title: 'test', artist: 'test', album: 'test', genre: 'test' },
-    { id: 2, title: 'test', artist: 'test', album: 'test', genre: 'test' },
-  ]);
+  const songList = useSelector((state) => state.songs.songs);
+  const formRef = useRef(null);
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchSongs());
+  }, []);
 
   const handleEdit = (id) => {
     //edit
@@ -20,12 +31,35 @@ function App() {
 
   const handleDelete = (id) => {
     //delete
-    console.log('Delete: ', id);
+    dispatch(deleteSongs({ id }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const form = formRef.current;
+
+    // check if input fields have a value or not
+    const title = form.title.value;
+    const artist = form.artist.value;
+    const album = form.album.value;
+    const genre = form.genre.value;
+
+    if (!title || !artist || !album || !genre) {
+      return;
+    }
+
+    // submit the form
+    // form.submit();
+    dispatch(postSongs({ title, artist, album, genre }));
+    form.title.value = '';
+    form.artist.value = '';
+    form.album.value = '';
+    form.genre.value = '';
   };
   return (
     <Container>
       <Main>
-        <Form>
+        <Form ref={formRef} onSubmit={handleSubmit}>
           <h1>List of songs</h1>
           <div className="container">
             <input
@@ -33,12 +67,14 @@ function App() {
               id="title"
               name="title"
               placeholder="Title of the song...."
+              required
             />
             <input
               type="text"
               id="artist"
               name="artist"
               placeholder="Artist of the song...."
+              required
             />
 
             <input
@@ -46,26 +82,18 @@ function App() {
               id="album"
               name="album"
               placeholder="Album of the song...."
+              required
             />
             <input
               type="text"
               id="genre"
               name="genre"
               placeholder="Genre of the song...."
+              required
             />
             <button type="submit">Submit</button>
           </div>
         </Form>
-
-        {/* <div
-          contentEditable
-          onInput={handleTextChange}
-          dangerouslySetInnerHTML={{ __html: text }}
-        ></div> */}
-        {/* <p className="edit_instruction">
-          <EditIcon />
-          Double click on the items to Edit
-        </p> */}
         <Table>
           <thead>
             <tr>
@@ -84,10 +112,10 @@ function App() {
                 <td>{song.title}</td>
                 <td>{song.album}</td>
                 <td>{song.genre}</td>
-                <td onClick={() => handleEdit(song.id)}>
+                <td onClick={() => handleEdit(song._id)}>
                   <EditIcon />
                 </td>
-                <td onClick={() => handleDelete(song.id)}>
+                <td onClick={() => handleDelete(song._id)}>
                   <DeleteSweepIcon />
                 </td>
               </tr>
