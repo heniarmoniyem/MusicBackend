@@ -60,7 +60,7 @@ export const deleteSongs = createAsyncThunk(
 
 // update Songs
 export const updateSongs = createAsyncThunk(
-  'songs/deleteSongs',
+  'songs/updateSongs',
   async (id, thunkAPI) => {
     const response = await fetch(
       `https://addissoftmusicapi.azurewebsites.net/song/`,
