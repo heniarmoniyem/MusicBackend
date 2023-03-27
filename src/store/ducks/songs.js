@@ -4,8 +4,9 @@ const ADDSONG = 'addSong';
 export const getSong = () => ({
   type: GETSONG,
 });
-export const addSong = () => ({
+export const addSong = (song) => ({
   type: ADDSONG,
+  song,
 });
 
 const initialState = {
@@ -20,9 +21,10 @@ export default function songReducer(state = initialState, action) {
         song: action.payload,
       };
     case ADDSONG:
+      const { song } = action;
       return {
         ...state,
-        song: action.payload,
+        song,
       };
     default:
       return state;
