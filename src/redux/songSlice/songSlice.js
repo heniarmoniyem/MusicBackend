@@ -1,4 +1,4 @@
-import { fetchSongs, postSongs, deleteSongs } from './songThunks';
+import { fetchSongs, postSongs, deleteSongs, updateSongs } from './songThunks';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -50,6 +50,20 @@ export const songSlice = createSlice({
         console.log('action.payload: ', action.payload);
       })
       .addCase(deleteSongs.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+
+      //update songs
+      .addCase(updateSongs.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateSongs.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // state.songs = state.songs.concat(action.payload);
+        console.log('action.payload: ', action.payload);
+      })
+      .addCase(updateSongs.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       });
