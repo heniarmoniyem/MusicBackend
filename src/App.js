@@ -75,7 +75,7 @@ function App() {
 
     // submit the form
     // form.submit();
-    dispatch(postSongs({ title, artist, album, genre }));
+    dispatch(postSongs({ artist, album, title, genre }));
     form.title.value = '';
     form.artist.value = '';
     form.album.value = '';
@@ -194,8 +194,8 @@ function App() {
           <tbody>
             {songList.map((song, index) => (
               <tr key={index}>
-                <td>{song.artist}</td>
                 <td>{song.title}</td>
+                <td>{song.artist}</td>
                 <td>{song.album}</td>
                 <td>{song.genre}</td>
                 <td onClick={() => handleEdit(song._id)}>
